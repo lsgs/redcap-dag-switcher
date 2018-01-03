@@ -2,7 +2,7 @@
 /**
  * REDCap External Module: DAG Switcher
  * Enable project users to switch between any number of the project's Data 
- * Access Groups (and/or "No assignment")
+ * Access Groups (and/or "No Assignment")
  * @author Luke Stevens, Murdoch Children's Research Institute
  */
 namespace MCRI\DAGSwitcher;
@@ -47,6 +47,10 @@ class DAGSwitcher extends AbstractExternalModule
                         
                         $this->renderDAGPageTableContainer();
                         $this->includeDAGPageJs();
+                
+                } else if ($pageRoute==='UserRights') {
+                        
+                        $this->includeUserRightsPageJs();
                 
                 }                                                           // Include display of current dag and option to switch when...
                 else if (isset($this->project_id) && $this->project_id>0 && // on a project page, and
@@ -140,9 +144,10 @@ class DAGSwitcher extends AbstractExternalModule
          * Print DAG Switcher JavaScript code to DAGs page.
          */
         protected function includeDAGPageJs() {
+                $jsPath = $this->getUrl('dag_user_config.js');
                 $getTablePath = $this->getUrl('get_user_dags_table_ajax.php');
                 $getTableRowsPath = $this->getUrl('get_user_dags_table_rows_ajax.php');
-                $setPath = $this->getUrl('set_user_dag_ajax.php');
+                $setUserDagPath = $this->getUrl('set_user_dag_ajax.php');
                 ?>
 <style type="text/css">
     #dag-switcher-config-container { width:698px; display:none; margin-top:20px; }
@@ -152,105 +157,14 @@ class DAGSwitcher extends AbstractExternalModule
     #dag-switcher-table tr.even { background-color: #fafafa !important; }
     #dag-switcher-table td.highlight { background-color: whitesmoke !important; }
 </style>
+<script type="text/javascript" src="<?php echo $jsPath;?>"></script>
 <script type="text/javascript">
-'use strict';
-var <?php echo self::MODULE_JS_VARNAME;?> = (function(window, document, $, undefined) { // var MCRI_DAG_Switcher = (function(...
-    function getTable() {
-        $('#dag-switcher-table-container').hide().html('');
-        $('#dag-switcher-spin').show();
-        var rowoption = $('#dag-switcher-config-container input[name="rowoption"]:checked').val();
-        $.get('<?php echo $getTablePath;?>&rowoption='+rowoption).then(function(data) {
-            $('#dag-switcher-spin').hide();
-            $('#dag-switcher-table-container').html(data).show();
-            initDataTable(rowoption);
-        });
-    }
-    
-    function initDataTable(rowoption) {
-        var table = $('#dag-switcher-table').DataTable( { 
-            paging: false,
-            searching: true,
-            scrollX: true,
-            scrollY: "350px",
-            scrollCollapse: true,
-            fixedHeader: { header: true },
-            fixedColumns: { leftColumns: 1 }, 
-            ajax: '<?php echo $getTableRowsPath;?>&rowoption='+rowoption,
-            columnDefs: [ 
-                {
-                    "targets": 0,
-                    "render": function ( celldata, type, row ) {
-                        return celldata.rowref;
-                    }
-                },
-                {
-                    "targets": "_all",
-                    "render": function ( celldata, type, row ) {
-                        var checked = (celldata.enabled)?"checked":"";
-                        if (type==='display') {
-                            return "<input type='checkbox' data-dag='"+celldata.dagid+"' data-user='"+celldata.user+"' "+checked+"></input><img src='<?php echo APP_PATH_IMAGES;?>progress_circle.gif' style='display:none;'>";
-                        } else {
-                            return celldata.enabled+'-'+celldata.rowref; // for sorting
-                        }
-                    }
-                }
-            ]
-        });
-        
-        $('#dag-switcher-table tbody').on('change', 'input', function () {
-            var cb = $(this);
-            var parentTd = cb.parent('td');
-            var spinner = parentTd.find('img');
-
-            cb.hide();
-            spinner.show();
-
-            var colour = '#ff3300'; // redish
-            var user = cb.data('user');
-            var dag = cb.data('dag');
-            var enabled = cb.is(':checked');
-            
-            $.ajax({
-                method: 'POST',
-                url: '<?php echo $setPath;?>',
-                data: { user: user, dag: dag, enabled: enabled },
-                dataType: 'json'
-            })
-            .done(function(data) {
-                if (data.result==='1') { 
-                    colour = '#66ff99'; // greenish
-                } else {
-                    enabled = !enabled; // changing the selection failed so change it back to what it waa
-                }
-            })
-            .fail(function(data) {
-                console.log(data.result);
-                enabled = !enabled; // changing the selection failed so change it back to what it waa
-            })
-            .always(function(data) {
-                cb.prop('checked', enabled);
-                parentTd.effect('highlight', {color:colour}, 3000);
-                spinner.hide();
-                cb.show();
-            });
-        });
-        
-        var searchBoxParentPrevDiv = $('#dag-switcher-table_filter').parent().prev('div');
-        $('#dag-switcher-table_info').detach().appendTo(searchBoxParentPrevDiv);
-    }
-
-    function refreshTableData() {
-        $('#dag-switcher-table').DataTable().ajax.reload( null, false );
-    }
-    
     $(document).ready(function() {
-        $('#dag-switcher-config-container').delegate('input[name=rowoption]','change', function () {
-            getTable();
-        });
-        $('#dag-switcher-config-container').detach().insertAfter('#group_table').show();
-        getTable();
+        var getTableAjaxPath = '<?php echo $getTablePath;?>';
+        var getTableRowsAjaxPath = '<?php echo $getTableRowsPath;?>';;
+        var setUserDagAjaxPath = '<?php echo $setUserDagPath;?>';;
+        MCRI_DAG_Switcher_Config.initPage(app_path_images, getTableAjaxPath, getTableRowsAjaxPath, setUserDagAjaxPath);
     });
-})(window, document, jQuery);
 </script>
                 <?php
         }
@@ -466,6 +380,7 @@ var <?php echo self::MODULE_JS_VARNAME;?> = (function(window, document, $, undef
          * switching to another enabled DAG to project pages.
          */
         protected function includeProjectPageJs() {
+                $jsPath = $this->getUrl('dag_switch.js');
                 $savePath = $this->getUrl('user_dag_switch_ajax.php');
                 $dagSwitchDialogTitle = REDCap::filterHtml($this->getProjectSetting('dag-switcher-dialog-title'));
                 ?>
@@ -475,49 +390,13 @@ var <?php echo self::MODULE_JS_VARNAME;?> = (function(window, document, $, undef
         margin:-15px 0 15px 0;
     }
 </style>
+<script type="text/javascript" src="<?php echo $jsPath;?>"></script>
 <script type="text/javascript">
-(function() {
-    function doDagSwitch(newDag) {
-        var savePath = '<?php print $savePath;?>';
-
-        $(":button:contains('Ok')").html('Please wait...');
-        $(":button:contains('Cancel')").css("display","none");
-
-        $.ajax({
-            url: savePath, 
-            data: { pid: pid, dag: newDag },
-            success: function(data) {
-                if (!data.result) {
-                    alert('ERROR: '+data.msg);
-                }
-                window.location.reload(false);
-            },
-            dataType: 'json'
-        });
-    }
-    
     $(document).ready(function() {
-        $('#dag-switcher-change-dialog').dialog({
-            title: '<?php print $dagSwitchDialogTitle;?>',
-            autoOpen: false,
-            modal: true,
-            buttons: { 
-                Ok: function() { 
-                    var newDag = $('#dag-switcher-change-select').val();
-                    doDagSwitch(newDag); 
-                }, 
-                Cancel: function() { $( this ).dialog( "close" ); } 
-            }
-        });
-        
-        $('#dag-switcher-change-button').click(function(e) {
-            e.preventDefault();
-            $('#dag-switcher-change-dialog').dialog('open');
-        });
-        
-        $('#dag-switcher-current-dag-block').detach().insertAfter('#subheader').show();
+        var savePath = '<?php echo $savePath;?>';
+        var dagSwitchDialogTitle = '<?php echo $dagSwitchDialogTitle;?>';;
+        MCRI_DAG_Switcher_Switch.init(savePath, dagSwitchDialogTitle);
     });
-})();
 </script>
                 <?php
         }
@@ -554,5 +433,30 @@ var <?php echo self::MODULE_JS_VARNAME;?> = (function(window, document, $, undef
                         return $newDag;
                 }
                 return 'Could not update user rights';
+        }
+        
+        /**
+         * Print DAG Switcher JavaScript code to User Rights page.
+         * Users' current DAG display is augmentied to indicate where user may 
+         * switch to other DAGs.
+         */
+        protected function includeUserRightsPageJs() {
+                $jsPath = $this->getUrl('user_rights.js');
+                $userDags = $this->getUserDAGs();
+                $dagNames = array(0=>$this->lang['data_access_groups_ajax_23']) + REDCap::getGroupNames(false);
+                ?>
+<script type="text/javascript" src="<?php echo $jsPath;?>"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        var userDags = JSON.parse('<?php echo json_encode($userDags);?>');
+        var dagNames = JSON.parse('<?php echo json_encode($dagNames);?>');
+        MCRI_DAG_Switcher_User_Rights.makePopovers(userDags, dagNames);        
+    });
+    
+    $(window).load(function() {
+        MCRI_DAG_Switcher_User_Rights.activatePopovers();        
+    });
+</script>
+                <?php
         }
 }

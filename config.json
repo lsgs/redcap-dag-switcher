@@ -18,12 +18,15 @@
             "write redcap_user_rights"
 	],
 
-	"description": "Enable project users to switch between any number of Data Access Groups (and/or \"No assignment\").",
+	"description": "Enable project users to switch between any number of Data Access Groups (and/or \"No Assignment\").",
 
 	"links": {
 	},
 
 	"system-settings": [
+	],
+
+	"project-settings": [
 		{
 			"key": "dag-switcher-block-text-pre",
 			"name": "Project page current DAG display text (before current DAG name)",
@@ -96,8 +99,5 @@
 			"type": "text",
 			"default": "Rows are Users"
 		}
-	],
-
-	"project-settings": [
         ]
 }
