@@ -1,0 +1,103 @@
+{
+	"name": "DAG Switcher",
+
+	"namespace": "MCRI\\DAGSwitcher",
+
+	"authors": [
+		{
+			"name": "Luke Stevens",
+			"email": "luke.stevens@mcri.edu.au",
+			"institution": "Murdoch Children's Research Institute"
+		}
+	],
+
+	"permissions": [
+            "hook_every_page_top",
+            "read redcap_log_event",
+            "read redcap_user_rights",
+            "write redcap_user_rights"
+	],
+
+	"description": "Enable project users to switch between any number of Data Access Groups (and/or \"No assignment\").",
+
+	"links": {
+	},
+
+	"system-settings": [
+		{
+			"key": "dag-switcher-block-text-pre",
+			"name": "Project page current DAG display text (before current DAG name)",
+			"required": true,
+			"allow-project-overrides": true,
+			"type": "text",
+			"default": "Current Data Access Group: "
+		},
+		{
+			"key": "dag-switcher-block-text-post",
+			"name": "Project page current DAG display text (following current DAG name)",
+			"required": true,
+			"allow-project-overrides": true,
+			"type": "text",
+			"default": " "
+		},
+		{
+			"key": "dag-switcher-dialog-title",
+			"name": "DAG switch dialog title",
+			"required": true,
+			"allow-project-overrides": true,
+			"type": "text",
+			"default": "Switch Data Access Group"
+		},
+		{
+			"key": "dag-switcher-dialog-text",
+			"name": "DAG switch dialog text",
+			"required": true,
+			"allow-project-overrides": true,
+			"type": "text",
+			"default": "Select the DAG to switch to:"
+		},
+		{
+			"key": "dag-switcher-dialog-change-button-text",
+			"name": "DAG switch dialog Change button text",
+			"required": true,
+			"allow-project-overrides": true,
+			"type": "text",
+			"default": "Switch"
+		},
+		{
+			"key": "dag-switcher-table-block-title",
+			"name": "DAG switcher DAG page block title",
+			"required": true,
+			"allow-project-overrides": true,
+			"type": "text",
+			"default": "DAG Switcher: Enable Multiple DAGs for Users"
+		},
+		{
+			"key": "dag-switcher-table-block-info",
+			"name": "DAG switcher DAG page block information text",
+			"required": true,
+			"allow-project-overrides": true,
+			"type": "text",
+			"default": "Let users switch between the DAGs enabled for them below.<br>Note: <strong>this does not override a user's <u>current</u> DAG allocation</strong>, as set above or on the User Rights page."
+		},
+		{
+			"key": "dag-switcher-table-row-option-dags",
+			"name": "DAG switcher table row option label (DAGs)",
+			"required": true,
+			"allow-project-overrides": true,
+			"type": "text",
+			"default": "Rows are DAGs"
+		},
+		{
+			"key": "dag-switcher-table-row-option-users",
+			"name": "DAG switcher table row option label (Users)",
+			"required": true,
+			"allow-project-overrides": true,
+			"type": "text",
+			"default": "Rows are Users"
+		}
+	],
+
+	"project-settings": [
+        ]
+}
