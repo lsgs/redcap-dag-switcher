@@ -125,6 +125,7 @@ class DAGSwitcher extends AbstractExternalModule
                 $dagTableRowOptionDags = REDCap::filterHtml($this->getProjectSetting('dag-switcher-table-row-option-dags'));
                 $dagTableRowOptionUsers = REDCap::filterHtml($this->getProjectSetting('dag-switcher-table-row-option-users'));
 
+                if ($this->getUIStateValue('rowoption')==='users') {
                         $rowOptionCheckedD = ''; 
                         $rowOptionCheckedU = 'checked'; // rows are users, columns are dags
                 } else {
@@ -189,6 +190,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $col0Hdr = $this->lang['global_22']; // Data Access Groups
                         $colGroupHdr = $this->lang['control_center_132']; // Users
                         $colSet = REDCap::getUsers();
+                        $this->saveUIStateValue('rowoption', 'dags');
                 } else { // $rowsAreDags===false // columns are dags
                         // column-per-dag, row-per-user (load via ajax)
                         $col0Hdr = $this->lang['control_center_132']; // Users
@@ -196,6 +198,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $colSet = REDCap::getGroupNames(false);
                         asort($colSet); // sort associative arrays in ascending order, according to the value, preserving keys
                         $colSet = array(0=>$this->lang['data_access_groups_ajax_23']) + $colSet; // [No Assignment]
+                        $this->saveUIStateValue('rowoption', 'users');
                 }
                 
                 $colhdrs = RCView::tr(array(),
