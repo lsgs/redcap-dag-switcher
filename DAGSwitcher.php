@@ -12,6 +12,7 @@ use Exception;
 use Logging;
 use RCView;
 use REDCap;
+use UIState;
 
 /**
  * REDCap External Module: DAG Switcher
@@ -123,9 +124,13 @@ class DAGSwitcher extends AbstractExternalModule
                 $dagTableBlockInfo = REDCap::filterHtml($this->getProjectSetting('dag-switcher-table-block-info'));
                 $dagTableRowOptionDags = REDCap::filterHtml($this->getProjectSetting('dag-switcher-table-row-option-dags'));
                 $dagTableRowOptionUsers = REDCap::filterHtml($this->getProjectSetting('dag-switcher-table-row-option-users'));
-                
-                $rowOptionCheckedD = 'checked'; // TODO save this value somewhere (log?) when toggled, then read here
-                $rowOptionCheckedU = '';
+
+                        $rowOptionCheckedD = ''; 
+                        $rowOptionCheckedU = 'checked'; // rows are users, columns are dags
+                } else {
+                        $rowOptionCheckedD = 'checked'; // rows are dags, columns are users
+                        $rowOptionCheckedU = '';
+                }
                 
                 print RCView::div(array('id'=>'dag-switcher-config-container', 'class'=>'gray'),//,'style'=>'width:698px;display:none;margin-top:20px'), 
                             RCView::div(array('style'=>'float:right'), "<input type='radio' name='rowoption' value='dags' $rowOptionCheckedD>&nbsp; $dagTableRowOptionDags<br><input type='radio' name='rowoption' value='users' $rowOptionCheckedU>&nbsp; $dagTableRowOptionUsers<br>").
@@ -217,7 +222,7 @@ class DAGSwitcher extends AbstractExternalModule
                         );
                 }
 
-                $html = RCView::table(array('class'=>'display nowrap compact no-footer','id'=>'dag-switcher-table'),
+                $html = RCView::table(array('class'=>'table table-striped table-bordered display nowrap compact no-footer','id'=>'dag-switcher-table'),
                                 RCView::thead(array(), $colhdrs)
                         );
 
@@ -257,6 +262,7 @@ class DAGSwitcher extends AbstractExternalModule
                                         $row[] = array(
                                             'rowref' => $dagName,
                                             'dagid' => $dagId,
+                                            'dagname' => $dagName,
                                             'user' => $user,
                                             'enabled' => (in_array($dagId, $usersEnabledDags[$user]))?1:0
                                         );
@@ -271,6 +277,7 @@ class DAGSwitcher extends AbstractExternalModule
                                         $row[] = array(
                                             'rowref' => $user,
                                             'dagid' => $dagId,
+                                            'dagname' => $dagName,
                                             'user' => $user,
                                             'enabled' => (in_array($dagId, $usersEnabledDags[$user]))?1:0
                                         );
@@ -459,4 +466,35 @@ class DAGSwitcher extends AbstractExternalModule
 </script>
                 <?php
         }
+
+        // TODO Remove these UI state config methods once they are implemented in AbstractExternalModule
+        
+        /**
+         * Return a value from the UI state config. Return null if key doesn't exist.
+         * @param int/string $key key
+         * @return mixed - value if exists, else return null
+         */
+        public function getUIStateValue($key)
+	{
+                return UIState::getUIStateValue($this->project_id/*self::detectProjectId()*/, get_class($this), $key);
+	}
+	
+        /**
+         * Save a value in the UI state config (e.g., $object = 'sidebar')
+         * @param int/string $key key
+         * @param mixed $value value for key
+         */
+	public function saveUIStateValue($key, $value)
+	{
+		UIState::saveUIStateValue($this->project_id/*self::detectProjectId()*/, get_class($this), $key, $value);
+	}
+	
+        /**
+         * Remove key-value from the UI state config
+         * @param int/string $key key
+         */
+	public function removeUIStateValue($key)
+	{
+		UIState::removeUIStateValue($this->project_id/*self::detectProjectId()*/, get_class($this), $key);
+	}
 }

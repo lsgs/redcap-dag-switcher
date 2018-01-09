@@ -29,7 +29,7 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
             scrollY: "350px",
             scrollCollapse: true,
             fixedHeader: { header: true },
-            fixedColumns: { leftColumns: 1 }, 
+/*            fixedColumns: { leftColumns: 1 }, this does weird things to the row colouring and you get overlapping cell wording when sorting on other columns */
             ajax: getTableRowsAjaxPath+'&rowoption='+rowoption,
             columnDefs: [ 
                 {
@@ -43,7 +43,7 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
                     "render": function ( celldata, type, row ) {
                         var checked = (celldata.enabled)?"checked":"";
                         if (type==='display') {
-                            return "<input type='checkbox' data-dag='"+celldata.dagid+"' data-user='"+celldata.user+"' "+checked+"></input><img src='"+app_path_images+"progress_circle.gif' style='display:none;'>";
+                            return "<input type='checkbox' data-dag='"+celldata.dagid+"' data-user='"+celldata.user+"' "+checked+"  title='"+celldata.dagname+" : "+celldata.user+"'></input><img src='"+app_path_images+"progress_circle.gif' style='display:none;'>";
                         } else {
                             return celldata.enabled+'-'+celldata.rowref; // for sorting
                         }
