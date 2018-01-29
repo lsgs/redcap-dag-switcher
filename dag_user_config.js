@@ -9,11 +9,13 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
     var getTableAjaxPath;
     var getTableRowsAjaxPath;
     var setUserDagAjaxPath;
+    var table;
+    var rowoption;
     
     function getTable() {
         $('#dag-switcher-table-container').hide().html('');
         $('#dag-switcher-spin').show();
-        var rowoption = $('#dag-switcher-config-container input[name="rowoption"]:checked').val();
+        rowoption = $('#dag-switcher-config-container input[name="rowoption"]:checked').val();
         $.get(getTableAjaxPath+'&rowoption='+rowoption).then(function(data) {
             $('#dag-switcher-spin').hide();
             $('#dag-switcher-table-container').html(data).show();
@@ -22,7 +24,7 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
     }
     
     function initDataTable(rowoption) {
-        var table = $('#dag-switcher-table').DataTable( { 
+        table = $('#dag-switcher-table').DataTable( { 
             paging: false,
             searching: true,
             scrollX: true,
@@ -41,7 +43,7 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
                 {
                     "targets": "_all",
                     "render": function ( celldata, type, row ) {
-                        var checked = (celldata.enabled)?"checked":"";
+                        var checked = (celldata.enabled!==undefined && celldata.enabled)?"checked":"";
                         if (type==='display') {
                             return "<input type='checkbox' data-dag='"+celldata.dagid+"' data-user='"+celldata.user+"' "+checked+"  title='"+celldata.dagname+" : "+celldata.user+"'></input><img src='"+app_path_images+"progress_circle.gif' style='display:none;'>";
                         } else {
@@ -96,7 +98,11 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
     }
 
     function refreshTableData() {
-        $('#dag-switcher-table').DataTable().ajax.reload( null, false );
+        if (rowoption==='dags') {
+            table.ajax.reload( null, false );
+        } else {
+            getTable();
+        }
     }
     
     return {
@@ -111,6 +117,14 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
             });
             $('#dag-switcher-config-container').detach().insertAfter('#group_table').show();
             getTable();
+
+            // The hidedagMsg() function is called after adding/deleting a group
+            // Augment it with a refresh of the dag/user table
+            var originalMethod = window.hidedagMsg;
+            window.hidedagMsg = function () {
+                originalMethod.apply(window, arguments);
+                refreshTableData(); 
+            };
         }
     };
 })(window, document, jQuery);

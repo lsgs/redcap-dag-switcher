@@ -61,6 +61,9 @@ class DAGSwitcher extends AbstractExternalModule
                         $this->renderUserDAGInfo();
                         $this->includeProjectPageJs();
                 } 
+                else if (isset($this->project_id) && $this->project_id>0) {
+                        $this->includeEveryPageJs();
+                }
         }
 
         /**
@@ -125,7 +128,7 @@ class DAGSwitcher extends AbstractExternalModule
                 $dagTableRowOptionDags = REDCap::filterHtml($this->getProjectSetting('dag-switcher-table-row-option-dags'));
                 $dagTableRowOptionUsers = REDCap::filterHtml($this->getProjectSetting('dag-switcher-table-row-option-users'));
 
-                if ($this->getUIStateValue('rowoption')==='users') {
+                if ($this->getUserSetting('rowoption')==='users') {
                         $rowOptionCheckedD = ''; 
                         $rowOptionCheckedU = 'checked'; // rows are users, columns are dags
                 } else {
@@ -190,7 +193,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $col0Hdr = $this->lang['global_22']; // Data Access Groups
                         $colGroupHdr = $this->lang['control_center_132']; // Users
                         $colSet = REDCap::getUsers();
-                        $this->saveUIStateValue('rowoption', 'dags');
+                        $this->saveUserSetting('rowoption', 'dags');
                 } else { // $rowsAreDags===false // columns are dags
                         // column-per-dag, row-per-user (load via ajax)
                         $col0Hdr = $this->lang['control_center_132']; // Users
@@ -198,7 +201,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $colSet = REDCap::getGroupNames(false);
                         asort($colSet); // sort associative arrays in ascending order, according to the value, preserving keys
                         $colSet = array(0=>$this->lang['data_access_groups_ajax_23']) + $colSet; // [No Assignment]
-                        $this->saveUIStateValue('rowoption', 'users');
+                        $this->saveUserSetting('rowoption', 'users');
                 }
                 
                 $colhdrs = RCView::tr(array(),
@@ -470,6 +473,31 @@ class DAGSwitcher extends AbstractExternalModule
                 <?php
         }
 
+         /**
+         * All project pages - inject current site name to Data Collection and 
+         * Reports menu section headings
+         */
+        protected function includeEveryPageJs() {
+                $dags = REDCap::getGroupNames(false);
+                if ($dags !== false) {
+                        $userDags = $this->getUserDAGs();
+                        if (isset($userDags[$this->user]) && count($userDags[$this->user]) > 1) {
+                                $currentDagId = ($this->user_rights['group_id'] !== '') ? 1*$this->user_rights['group_id'] : 0;
+                                $currentDagName = ($currentDagId===0) ? $this->lang['dashboard_12'] : $dags[$currentDagId]; //dashboard_12 = "All"
+                                echo "<span class='dag-switcher-dag-name' style='display:none;'>$currentDagName</span>";
+                                ?>
+<script type="text/javascript">
+    $(window).load(function() {
+        var dagName = $('.dag-switcher-dag-name');
+        dagName.appendTo('div.x-panel-header > div:contains("<?php echo $this->lang['bottom_47'];?>")').css('color','#888').css('margin-left','3px').show(); //Data Collection
+        dagName.clone().appendTo('div.x-panel-header > div:contains("<?php echo $this->lang['app_06'];?>")'); //Reports
+    });
+</script>
+                                <?php
+                        }
+                }
+        }
+
         // TODO Remove these UI state config methods once they are implemented in AbstractExternalModule
         
         /**
@@ -477,7 +505,7 @@ class DAGSwitcher extends AbstractExternalModule
          * @param int/string $key key
          * @return mixed - value if exists, else return null
          */
-        public function getUIStateValue($key)
+        public function getUserSetting($key)
 	{
                 return UIState::getUIStateValue($this->project_id/*self::detectProjectId()*/, get_class($this), $key);
 	}
@@ -487,7 +515,7 @@ class DAGSwitcher extends AbstractExternalModule
          * @param int/string $key key
          * @param mixed $value value for key
          */
-	public function saveUIStateValue($key, $value)
+	public function saveUserSetting($key, $value)
 	{
 		UIState::saveUIStateValue($this->project_id/*self::detectProjectId()*/, get_class($this), $key, $value);
 	}
@@ -496,7 +524,7 @@ class DAGSwitcher extends AbstractExternalModule
          * Remove key-value from the UI state config
          * @param int/string $key key
          */
-	public function removeUIStateValue($key)
+	public function removeUserSetting($key)
 	{
 		UIState::removeUIStateValue($this->project_id/*self::detectProjectId()*/, get_class($this), $key);
 	}
