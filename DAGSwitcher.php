@@ -12,13 +12,14 @@ use Exception;
 use Logging;
 use RCView;
 use REDCap;
-use UIState;
 
 /**
  * REDCap External Module: DAG Switcher
  */
 class DAGSwitcher extends AbstractExternalModule
 {
+	const UI_STATE_OBJECT_PREFIX = 'external-modules.';
+        
         const MODULE_JS_VARNAME = 'MCRI_DAG_Switcher';
         
         private $lang;
@@ -193,7 +194,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $col0Hdr = $this->lang['global_22']; // Data Access Groups
                         $colGroupHdr = $this->lang['control_center_132']; // Users
                         $colSet = REDCap::getUsers();
-                        $this->saveUserSetting('rowoption', 'dags');
+                        $this->setUserSetting('rowoption', 'dags');
                 } else { // $rowsAreDags===false // columns are dags
                         // column-per-dag, row-per-user (load via ajax)
                         $col0Hdr = $this->lang['control_center_132']; // Users
@@ -201,7 +202,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $colSet = REDCap::getGroupNames(false);
                         asort($colSet); // sort associative arrays in ascending order, according to the value, preserving keys
                         $colSet = array(0=>$this->lang['data_access_groups_ajax_23']) + $colSet; // [No Assignment]
-                        $this->saveUserSetting('rowoption', 'users');
+                        $this->setUserSetting('rowoption', 'users');
                 }
                 
                 $colhdrs = RCView::tr(array(),
@@ -507,7 +508,7 @@ class DAGSwitcher extends AbstractExternalModule
          */
         public function getUserSetting($key)
 	{
-                return UIState::getUIStateValue($this->project_id/*self::detectProjectId()*/, get_class($this), $key);
+		return \UIState::getUIStateValue($this->project_id, self::UI_STATE_OBJECT_PREFIX . $this->PREFIX, $key);
 	}
 	
         /**
@@ -515,9 +516,9 @@ class DAGSwitcher extends AbstractExternalModule
          * @param int/string $key key
          * @param mixed $value value for key
          */
-	public function saveUserSetting($key, $value)
+	public function setUserSetting($key, $value)
 	{
-		UIState::saveUIStateValue($this->project_id/*self::detectProjectId()*/, get_class($this), $key, $value);
+		\UIState::saveUIStateValue($this->project_id, self::UI_STATE_OBJECT_PREFIX . $this->PREFIX, $key, $value);
 	}
 	
         /**
@@ -526,6 +527,6 @@ class DAGSwitcher extends AbstractExternalModule
          */
 	public function removeUserSetting($key)
 	{
-		UIState::removeUIStateValue($this->project_id/*self::detectProjectId()*/, get_class($this), $key);
+		\UIState::removeUIStateValue($this->project_id, self::UI_STATE_OBJECT_PREFIX . $this->PREFIX, $key);
 	}
 }
