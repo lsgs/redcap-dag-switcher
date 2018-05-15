@@ -8,7 +8,6 @@
 namespace MCRI\DAGSwitcher;
 
 use ExternalModules\AbstractExternalModule;
-use Exception;
 use Logging;
 use RCView;
 use REDCap;
@@ -201,7 +200,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $colGroupHdr = $this->lang['global_22']; // Data Access Groups
                         $colSet = REDCap::getGroupNames(false);
                         asort($colSet); // sort associative arrays in ascending order, according to the value, preserving keys
-                        $colSet = array(0=>$this->lang['data_access_groups_ajax_23']) + $colSet; // [No Assignment]
+                        $colSet = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)$colSet; // [No Assignment]
                         $this->setUserSetting('rowoption', 'users');
                 }
                 
@@ -255,12 +254,12 @@ class DAGSwitcher extends AbstractExternalModule
 
                 $dags = REDCap::getGroupNames(false);
                 asort($dags); // sort associative arrays in ascending order, according to the value, preserving keys
-                $dags = array(0=>$this->lang['data_access_groups_ajax_23']) + $dags; // [No Assignment]
+                $dags = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)$dags; // [No Assignment]
                 
                 $rows = array();
                 
-                if (count($dags)===1 || count($users)===0) {
-                        $rows = null;
+                if (count($users)===0) { // can only be a superuser viewing an orphan project so don't need anything fancy returned
+                        $rows = null; 
                 } else if ($rowsAreDags) {
                         foreach ($dags as $dagId => $dagName) {
                                 $row = array();
@@ -304,7 +303,7 @@ class DAGSwitcher extends AbstractExternalModule
          */
         public function saveUserDAG($user, $dag, $enabled) {
                 $enabled = (bool)$enabled;
-                $projDags = array(0=>$this->lang['data_access_groups_ajax_23']) + REDCap::getGroupNames();
+                $projDags = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)REDCap::getGroupNames();
                 $projUsers = REDCap::getUsers();
                 if (!array_key_exists($dag, $projDags) || !in_array($user, $projUsers)) { return '0'; } // invalid dag or user
             
@@ -340,7 +339,7 @@ class DAGSwitcher extends AbstractExternalModule
                 $dags = REDCap::getGroupNames(false);
 
                 if ($dags !== false) {
-                        $dags = array(0=>$this->lang['data_access_groups_ajax_23']) + $dags; // [No Assignment]
+                        $dags = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)$dags; // [No Assignment]
 
                         $changeButton = '';
                         $userDags = $this->getUserDAGs();
@@ -358,7 +357,7 @@ class DAGSwitcher extends AbstractExternalModule
                                 $thisUserOtherDags = array();
 
                                 foreach ($userDags[$this->user] as $id) {
-                                        if (intval($id) !== intval($currentDagId)) {
+                                        if (array_key_exists($id, $dags) && intval($id) !== intval($currentDagId)) {
                                                 $thisUserOtherDags[$id] = $dags[$id];
                                         }
                                 }
@@ -424,7 +423,7 @@ class DAGSwitcher extends AbstractExternalModule
                 
                 $userDags = $this->getUserDAGs();
 
-                $projDags = array(0=>$this->lang['data_access_groups_ajax_23']) + REDCap::getGroupNames();
+                $projDags = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)REDCap::getGroupNames();
                 if (!array_key_exists($newDag, $projDags)) { return 'Invalid DAG'; }
                 if (!array_key_exists($this->user, $userDags)) { return 'Invalid user'; }
                 if (!in_array($newDag, $userDags[$this->user])) { return 'User/DAG assignment not permitted'; }
@@ -457,7 +456,7 @@ class DAGSwitcher extends AbstractExternalModule
         protected function includeUserRightsPageJs() {
                 $jsPath = $this->getUrl('user_rights.js');
                 $userDags = $this->getUserDAGs();
-                $dagNames = array(0=>$this->lang['data_access_groups_ajax_23']) + REDCap::getGroupNames(false);
+                $dagNames = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)REDCap::getGroupNames(false);
                 ?>
 <script type="text/javascript" src="<?php echo $jsPath;?>"></script>
 <script type="text/javascript">
@@ -499,7 +498,7 @@ class DAGSwitcher extends AbstractExternalModule
                 }
         }
 
-        // TODO Remove these UI state config methods once they are implemented in AbstractExternalModule
+        // TODO Remove these UI state config methods once they are implemented in AbstractExternalModule (min redcap 8.3.0)
         
         /**
          * Return a value from the UI state config. Return null if key doesn't exist.
