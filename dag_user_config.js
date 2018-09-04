@@ -37,15 +37,22 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
                 {
                     "targets": 0,
                     "render": function ( celldata, type, row ) {
-                        return celldata.rowref;
+                        var celltext;
+                        if (typeof celldata.is_super !== 'undefined' && celldata.is_super) {
+                            celltext = '<span style="color:#777;" title="Super users see all!">'+celldata.rowref+'</span>';
+                        } else {
+                            celltext = celldata.rowref;
+                        }
+                        return celltext;
                     }
                 },
                 {
                     "targets": "_all",
                     "render": function ( celldata, type, row ) {
-                        var checked = (celldata.enabled!==undefined && celldata.enabled)?"checked":"";
+                        var checked = (celldata.enabled!==undefined && celldata.enabled)?'checked':'';
+                        var disabled = (celldata.is_super!==undefined && celldata.is_super)?'disabled title="Super users see all!"':'';
                         if (type==='display') {
-                            return "<input type='checkbox' data-dag='"+celldata.dagid+"' data-user='"+celldata.user+"' "+checked+"  title='"+celldata.dagname+" : "+celldata.user+"'></input><img src='"+app_path_images+"progress_circle.gif' style='display:none;'>";
+                            return "<input type='checkbox' data-dag='"+celldata.dagid+"' data-user='"+celldata.user+"' "+checked+" "+disabled+"  title='"+celldata.dagname+" : "+celldata.user+"'></input><img src='"+app_path_images+"progress_circle.gif' style='display:none;'>";
                         } else {
                             return celldata.enabled+'-'+celldata.rowref; // for sorting
                         }

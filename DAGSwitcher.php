@@ -8,8 +8,10 @@
 namespace MCRI\DAGSwitcher;
 
 use ExternalModules\AbstractExternalModule;
+use \ExternalModules\ExternalModules;
 use Logging;
 use RCView;
+use Project;
 use REDCap;
 
 /**
@@ -33,12 +35,12 @@ class DAGSwitcher extends AbstractExternalModule
         public function __construct() {
                 parent::__construct();
                 global $lang, $user_rights;
-                $this->lang = $lang;
+                $this->lang = &$lang;
                 $this->page = PAGE;
                 $this->project_id = intval(PROJECT_ID);
                 $this->super_user = SUPER_USER;
                 $this->user = strtolower(USERID);
-                $this->user_rights = $user_rights;
+                $this->user_rights = &$user_rights;
         }
         
         public function hook_every_page_top($project_id) {
@@ -187,6 +189,7 @@ class DAGSwitcher extends AbstractExternalModule
          */
         public function getUserDAGsTable($rowsAreDags=true) {
                 $html = '';
+                $superusers = array();
                 
                 if ($rowsAreDags) { // columns are users
                         // column-per-user, row-per-dag (load via ajax)
@@ -194,6 +197,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $colGroupHdr = $this->lang['control_center_132']; // Users
                         $colSet = REDCap::getUsers();
                         $this->setUserSetting('rowoption', 'dags');
+                        $superusers = $this->readSuperUserNames();
                 } else { // $rowsAreDags===false // columns are dags
                         // column-per-dag, row-per-user (load via ajax)
                         $col0Hdr = $this->lang['control_center_132']; // Users
@@ -217,6 +221,9 @@ class DAGSwitcher extends AbstractExternalModule
                         )
                 );
                 foreach ($colSet as $col) {
+                        if ($rowsAreDags && in_array($col, $superusers)) {
+                                $col = RCView::span(array('style'=>'color:#777;','title'=>'Super users see all!'),$col);
+                        }
                         $colhdrs .= RCView::th(array('class'=>'', 'style'=>'border-top: 0px none; font-size: 12px; text-align: center; padding: 3px; white-space: normal; vertical-align: bottom; width: 22px;'),
                                 RCView::div(array('style'=>'font-weight:normal;'),
                                         RCView::span(array('class'=>'vertical-text'),
@@ -270,7 +277,8 @@ class DAGSwitcher extends AbstractExternalModule
                                             'dagid' => $dagId,
                                             'dagname' => $dagName,
                                             'user' => $user,
-                                            'enabled' => (in_array($dagId, $usersEnabledDags[$user]))?1:0
+                                            'enabled' => (in_array($dagId, $usersEnabledDags[$user]))?1:0,
+                                            'is_super' => (in_array($user, $this->readSuperUserNames()))?1:0
                                         );
                                 }
                                 $rows[] = $row;
@@ -278,14 +286,15 @@ class DAGSwitcher extends AbstractExternalModule
                 } else {
                         foreach ($users as $user) {
                                 $row = array();
-                                $row[] = array('rowref'=>$user);
+                                $row[] = array('rowref'=>$user,'is_super' => (in_array($user, $this->readSuperUserNames()))?1:0);
                                 foreach ($dags as $dagId => $dagName) {
                                         $row[] = array(
                                             'rowref' => $user,
                                             'dagid' => $dagId,
                                             'dagname' => $dagName,
                                             'user' => $user,
-                                            'enabled' => (in_array($dagId, $usersEnabledDags[$user]))?1:0
+                                            'enabled' => (in_array($dagId, $usersEnabledDags[$user]))?1:0,
+                                            'is_super' => (in_array($user, $this->readSuperUserNames()))?1:0
                                         );
                                 }
                                 $rows[] = $row;
@@ -294,6 +303,22 @@ class DAGSwitcher extends AbstractExternalModule
                 return $rows;
         }
 
+        /**
+         * Read the list of superusers' usernames
+         * @return array Usernames of superusers
+         */
+        protected function readSuperUserNames() {
+                $superusers = array();
+                
+                $r = db_query('select username from redcap_user_information where super_user=1');
+                if ($r->num_rows > 0) {
+                        while ($row = $r->fetch_assoc()) {
+                                $superusers[] = $row['username'];
+                        }
+                }
+                return $superusers;
+        }
+        
         /**
          * Enable or disable a DAG for a user
          * @param int $user Valid username for project
@@ -368,10 +393,28 @@ class DAGSwitcher extends AbstractExternalModule
 
                                 $dagSelect = RCView::select(array('id'=>'dag-switcher-change-select', 'class'=>'form-control'), $thisUserOtherDags);
 
+                                $apiMsg = '';
+                                if ($this->user_rights['api_export'] || $this->user_rights['api_export']) {
+                                        $apiMsg = RCView::div(
+                                            array('class'=>'blue', 'style'=>'margin:5px 0;'), 
+                                            RCView::img(array('src'=>'computer.png')).
+                                            RCView::span(array(), 'You may also use the <strong>API</strong>. ').
+                                            RCView::a(
+                                                    array('href'=>'javascript:', 'onclick'=>'if($("#dag-switch-api-info").is(":hidden")){$(this).html("[show less]");$("#dag-switch-api-info").slideDown();}else{$(this).html("[show more]");$("#dag-switch-api-info").slideUp();};'), 
+                                                    RCView::span(array(), '[show info]')
+                                            ).
+                                            RCView::div(
+                                                array('id'=>'dag-switch-api-info', 'style'=>'display:none;margin-top:10px;'), 
+                                                '<strong>POST</strong> "token" and "dag" (id or unique name) to your API endpoint.<br>You must including the query string shown in this example:<br><span style="font-family:monospace;font-size:80%;">curl -d "token=ABCDEF0123456789ABCDEF0123456789&dag=site_a" <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"'.APP_PATH_WEBROOT_FULL.'/api/?NOAUTH&type=module&prefix=dag_switcher&page=user_dag_switch_api"</span>'
+                                            )
+                                        );
+                                }
+                                
                                 print RCView::div(
                                         array('id'=>'dag-switcher-change-dialog'),
                                         RCView::div(array('style'=>'margin:5px 0;'), $dagSwitchDialogText).
-                                        $dagSelect
+                                        $dagSelect.
+                                        $apiMsg
                                 );
 
                                 print RCView::div(
@@ -416,15 +459,26 @@ class DAGSwitcher extends AbstractExternalModule
 
         /**
          * Switch current user to the dag id provided
-         * @param string $newDag
+         * @param string $newDag id or unique name of DAG to switch to
          * @return string New DAG id on successful switch, error message on fail
          */
         public function switchToDAG($newDag) {
                 
                 $userDags = $this->getUserDAGs();
 
-                $projDags = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)REDCap::getGroupNames();
+                $projDags = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)REDCap::getGroupNames(true);
+                
+                if (!is_int($newDag)) {
+                        foreach ($projDags as $id => $uname) {
+                                if ($uname===$newDag) {
+                                        $newDag = $id;
+                                        break;
+                                }
+                        }
+                }
+                
                 if (!array_key_exists($newDag, $projDags)) { return 'Invalid DAG'; }
+                
                 if (!array_key_exists($this->user, $userDags)) { return 'Invalid user'; }
                 if (!in_array($newDag, $userDags[$this->user])) { return 'User/DAG assignment not permitted'; }
 
@@ -462,7 +516,7 @@ class DAGSwitcher extends AbstractExternalModule
 <script type="text/javascript">
     $(document).ready(function() {
         var userDags = JSON.parse('<?php echo json_encode($userDags);?>');
-        var dagNames = JSON.parse('<?php echo json_encode($dagNames);?>');
+        var dagNames = JSON.parse('<?php echo json_encode($dagNames, JSON_HEX_APOS);?>');
         MCRI_DAG_Switcher_User_Rights.makePopovers(userDags, dagNames);        
     });
     
@@ -528,4 +582,21 @@ class DAGSwitcher extends AbstractExternalModule
 	{
 		\UIState::removeUIStateValue($this->project_id, self::UI_STATE_OBJECT_PREFIX . $this->PREFIX, $key);
 	}
+
+        public function apiDagSwitch($RestUtility, $newDag) {
+                global $Proj;
+                
+                // look up token and set project context
+                $request = $RestUtility::processRequest(true);
+
+                $this->user = $request->getRequestVars()['username'];
+                $this->project_id = $request->getRequestVars()['projectid'];
+                $Proj = $this->Proj = new Project($this->project_id);
+
+                if(!ExternalModules::getProjectSetting($this->PREFIX, $this->project_id, ExternalModules::KEY_ENABLED)) { 
+                        return "The requested module is currently disabled on this project."; 
+                }
+
+                return $this->switchToDAG($newDag);
+        }
 }

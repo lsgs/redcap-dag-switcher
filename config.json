@@ -20,7 +20,11 @@
 
 	"description": "Enable project users to switch between any number of Data Access Groups (and/or \"No Assignment\").",
 
-	"links": {
+	"no-auth-pages": [
+            "user_dag_switch_api"
+        ],
+        
+    "links": {
 	},
 
 	"system-settings": [

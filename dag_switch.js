@@ -31,6 +31,7 @@ var MCRI_DAG_Switcher_Switch = (function(window, document, $, undefined) {
             $('#dag-switcher-change-dialog').dialog({
                 title: dagSwitchDialogTitle,
                 autoOpen: false,
+                width: 500,
                 modal: true,
                 buttons: { 
                     Ok: function() { 
