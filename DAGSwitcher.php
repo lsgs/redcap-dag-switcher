@@ -29,21 +29,26 @@ class DAGSwitcher extends AbstractExternalModule
         private $super_user;
         private $user;
         private $user_rights;
+        private $Proj;
         
-        public static $IgnorePages = array('FileRepository','ProjectSetup','ExternalModules','UserRights','DataAccessGroups');
+        public static $IgnorePages = array('FileRepository','ProjectSetup','ExternalModules','UserRights','DataAccessGroups','SendItController');
 
         public function __construct() {
                 parent::__construct();
-                global $lang, $user_rights;
+                global $Proj, $lang, $user_rights;
                 $this->lang = &$lang;
                 $this->page = PAGE;
                 $this->project_id = intval(PROJECT_ID);
                 $this->super_user = SUPER_USER;
                 $this->user = strtolower(USERID);
                 $this->user_rights = &$user_rights;
+                $this->Proj = $Proj;
         }
         
         public function hook_every_page_top($project_id) {
+                global $Proj;
+                if (!isset($this->Proj)) { return; } // return if no project context even if project_id set (e.g. in export SendIController)
+
                 $pageRoute = $this->getPageRoute();
                 
                 if ($pageRoute==='DataAccessGroups') {
