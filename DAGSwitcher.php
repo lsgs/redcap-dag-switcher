@@ -525,7 +525,7 @@ class DAGSwitcher extends AbstractExternalModule
         MCRI_DAG_Switcher_User_Rights.makePopovers(userDags, dagNames);        
     });
     
-    $(window).load(function() {
+    $(window).on('load', function() {
         MCRI_DAG_Switcher_User_Rights.activatePopovers();        
     });
 </script>
@@ -546,7 +546,7 @@ class DAGSwitcher extends AbstractExternalModule
                                 echo "<span class='dag-switcher-dag-name' style='display:none;'>$currentDagName</span>";
                                 ?>
 <script type="text/javascript">
-    $(window).load(function() {
+    $(window).on('load', function() {
         var dagName = $('.dag-switcher-dag-name');
         dagName.appendTo('div.x-panel-header > div:contains("<?php echo $this->lang['bottom_47'];?>")').css('color','#888').css('margin-left','3px').show(); //Data Collection
         dagName.clone().appendTo('div.x-panel-header > div:contains("<?php echo $this->lang['app_06'];?>")'); //Reports
