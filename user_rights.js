@@ -29,7 +29,9 @@ var MCRI_DAG_Switcher_User_Rights = (function(window, document, $, JSON, undefin
     function appendDagInfo(appendAfter, user, dagIdList) {
         var content = '<div style=\'font-size:75%;padding:5px;\'>User <span class=\'text-primary\'>'+user+'</span> may switch to DAGs:<ul style=\'padding-left:10px;\'>';
         dagIdList.forEach(function(dagId) {
-            content += '<li><span class=\'text-info\'>'+allDagNames[dagId]+'</span></li>';
+            var str = allDagNames[dagId];
+            var singleDags = str.replace(/"/g, '');
+            content += '<li><span class=\'text-info\'>'+singleDags+'</span></li>';
         });
         content += '</ul>';
         appendAfter.after(' <a href="#" data-toggle="popover" data-content="'+content+'" style="font-size:75%;color:gray;">(+'+dagIdList.length+')</a>');
