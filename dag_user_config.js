@@ -88,7 +88,7 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
                 }
             })
             .fail(function(data) {
-                console.log(data.result);
+                console.log(data);
                 enabled = !enabled; // changing the selection failed so change it back to what it waa
             })
             .always(function(data) {

@@ -122,6 +122,25 @@ class DAGSwitcher extends AbstractExternalModule
                         $userDags = json_decode($row['data_values'], true);
                     }
                 }
+                
+                // return only valid group_id values (remove any DAGs that have been deleted)
+                $sql = "select group_id from redcap_data_access_groups where project_id = ".db_escape($this->project_id)." ";
+                $r = db_query($sql);
+                if ($r->num_rows > 0) {
+                    $currentDagIds = array();
+                    while ($row = $r->fetch_assoc()) {
+                        $currentDagIds[] = $row['group_id'];
+                    }
+                }
+                
+                foreach ($userDags as $user => $dags) {
+                        foreach ($dags as $dagKey => $dagId) {
+                                if ($dagId!=0 && !in_array($dagId, $currentDagIds)) {
+                                        unset($userDags[$user][$dagKey]);
+                                }
+                        }
+                }
+                
                 return $userDags;
         }
         
@@ -509,13 +528,15 @@ class DAGSwitcher extends AbstractExternalModule
         
         /**
          * Print DAG Switcher JavaScript code to User Rights page.
-         * Users' current DAG display is augmentied to indicate where user may 
+         * Users' current DAG display is augmented to indicate where user may 
          * switch to other DAGs.
          */
         protected function includeUserRightsPageJs() {
                 $jsPath = $this->getUrl('user_rights.js');
                 $userDags = $this->getUserDAGs();
                 $dagNames = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)REDCap::getGroupNames(false);
+                $dagNames = array_map('htmlentities', $dagNames); // encode quotes etc. in dag names
+                
                 ?>
 <script type="text/javascript" src="<?php echo $jsPath;?>"></script>
 <script type="text/javascript">
@@ -523,9 +544,6 @@ class DAGSwitcher extends AbstractExternalModule
         var userDags = JSON.parse('<?php echo json_encode($userDags);?>');
         var dagNames = JSON.parse('<?php echo json_encode($dagNames, JSON_HEX_APOS);?>');
         MCRI_DAG_Switcher_User_Rights.makePopovers(userDags, dagNames);        
-    });
-    
-    $(window).on('load', function() {
         MCRI_DAG_Switcher_User_Rights.activatePopovers();        
     });
 </script>
