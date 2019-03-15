@@ -10,9 +10,14 @@
 			"institution": "Murdoch Children's Research Institute"
 		}
 	],
+        
+        "compatibility": {
+                "redcap-version-min": "8.7.0"
+        },
 
 	"permissions": [
-            "hook_every_page_top",
+            "redcap_every_page_top",
+            "redcap_module_project_enable",
             "read redcap_log_event",
             "read redcap_user_rights",
             "write redcap_user_rights"
@@ -24,13 +29,19 @@
             "user_dag_switch_api"
         ],
         
-    "links": {
+        "links": {
 	},
 
 	"system-settings": [
 	],
 
 	"project-settings": [
+		{
+			"key": "user-dag-mapping",
+			"name": "User-DAG Mapping (updated by user/DAG selections on project DAGs page)",
+			"required": false,
+			"type": "textarea"
+		},
 		{
 			"key": "dag-switcher-block-text-pre",
 			"name": "Project page current DAG display text (before current DAG name)",
@@ -48,51 +59,44 @@
 		{
 			"key": "dag-switcher-dialog-title",
 			"name": "DAG switch dialog title",
-			"required": true,
-			"type": "text",
-			"default": "Switch Data Access Group"
+			"required": false,
+			"type": "text"
 		},
 		{
 			"key": "dag-switcher-dialog-text",
 			"name": "DAG switch dialog text",
-			"required": true,
-			"type": "text",
-			"default": "Select the DAG to switch to:"
+			"required": false,
+			"type": "text"
 		},
 		{
 			"key": "dag-switcher-dialog-change-button-text",
 			"name": "DAG switch dialog Change button text",
-			"required": true,
-			"type": "text",
-			"default": "Switch"
+			"required": false,
+			"type": "text"
 		},
 		{
 			"key": "dag-switcher-table-block-title",
 			"name": "DAG switcher DAG page block title",
-			"required": true,
-			"type": "text",
-			"default": "DAG Switcher: Enable Multiple DAGs for Users"
+			"required": false,
+			"type": "text"
 		},
 		{
 			"key": "dag-switcher-table-block-info",
 			"name": "DAG switcher DAG page block information text",
-			"required": true,
-			"type": "text",
-			"default": "Let users switch between the DAGs enabled for them below.<br>Note: <strong>this does not override a user's <u>current</u> DAG allocation</strong>, as set above or on the User Rights page."
+			"required": false,
+			"type": "text"
 		},
 		{
 			"key": "dag-switcher-table-row-option-dags",
 			"name": "DAG switcher table row option label (DAGs)",
-			"required": true,
-			"type": "text",
-			"default": "Rows are DAGs"
+			"required": false,
+			"type": "text"
 		},
 		{
 			"key": "dag-switcher-table-row-option-users",
 			"name": "DAG switcher table row option label (Users)",
-			"required": true,
-			"type": "text",
-			"default": "Rows are Users"
+			"required": false,
+			"type": "text"
 		}
         ]
 }

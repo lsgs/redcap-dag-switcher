@@ -32,6 +32,18 @@ class DAGSwitcher extends AbstractExternalModule
         private $Proj;
         
         public static $IgnorePages = array('FileRepository','ProjectSetup','ExternalModules','UserRights','DataAccessGroups','SendItController');
+        
+        private static $SettingDefaults = array(
+		"dag-switcher-block-text-pre" => "Current Data Access Group: ",
+                "dag-switcher-block-text-post" => " ",
+                "dag-switcher-dialog-title" => "Switch Data Access Group",
+		"dag-switcher-dialog-text" => "Select the DAG to switch to: ",
+		"dag-switcher-dialog-change-button-text" => "Switch",
+		"dag-switcher-table-block-title" => "DAG Switcher: Enable Multiple DAGs for Users",
+		"dag-switcher-table-block-info" => "Let users switch between the DAGs enabled for them below.<br>Note: <strong>this does not override a user's <u>current</u> DAG allocation</strong>, as set above or on the User Rights page.",
+		"dag-switcher-table-row-option-dags" => "Rows are DAGs",
+		"dag-switcher-table-row-option-users" => "Rows are Users"
+        );
 
         public function __construct() {
                 parent::__construct();
@@ -98,7 +110,8 @@ class DAGSwitcher extends AbstractExternalModule
         
         /**
          * Read the current configuration of users and enabled DAGs from the 
-         * most recent DAG Switcher record in redcap_log_event 
+         * user-dag-mapping project setting (or fall back to most recent DAG 
+         * Switcher record in redcap_log_event where stored until v1.2.1)
          * @return array 
          *  keys: Usernames
          *  values: Array of DAGids user may switch to
@@ -109,36 +122,47 @@ class DAGSwitcher extends AbstractExternalModule
          * ]
          */
         public function getUserDAGs() {
-                $userDags = array();
+                $updateConfig = false;
+                $userDags = json_decode($this->getProjectSetting('user-dag-mapping'), true);
+                
+                if (!is_array($userDags)) {
+                        $userDags = array();
 
-                $sql = "select data_values ".
-                       "from redcap_log_event ".
-                       "where project_id = ".db_escape($this->project_id)." ".
-                       "and description = '".db_escape($this->getModuleName())."' ".
-                       "order by log_event_id desc limit 1 ";
-                $r = db_query($sql);
-                if ($r->num_rows > 0) {
-                    while ($row = $r->fetch_assoc()) {
-                        $userDags = json_decode($row['data_values'], true);
-                    }
+                        $sql = "select data_values ".
+                               "from redcap_log_event ".
+                               "where project_id = ".db_escape($this->project_id)." ".
+                               "and description = '".db_escape($this->getModuleName())."' ".
+                               "order by log_event_id desc limit 1 ";
+                        $r = db_query($sql);
+                        if ($r->num_rows > 0) {
+                                while ($row = $r->fetch_assoc()) {
+                                       $userDags = json_decode($row['data_values'], true);
+                                }
+                                $updateConfig = true;
+                            }
                 }
                 
                 // return only valid group_id values (remove any DAGs that have been deleted)
                 $sql = "select group_id from redcap_data_access_groups where project_id = ".db_escape($this->project_id)." ";
                 $r = db_query($sql);
                 if ($r->num_rows > 0) {
-                    $currentDagIds = array();
-                    while ($row = $r->fetch_assoc()) {
-                        $currentDagIds[] = $row['group_id'];
-                    }
+                        $currentDagIds = array();
+                        while ($row = $r->fetch_assoc()) {
+                                $currentDagIds[] = $row['group_id'];
+                        }
                 }
                 
                 foreach ($userDags as $user => $dags) {
                         foreach ($dags as $dagKey => $dagId) {
                                 if ($dagId!=0 && !in_array($dagId, $currentDagIds)) {
                                         unset($userDags[$user][$dagKey]);
+                                        $updateConfig = true;
                                 }
                         }
+                }
+                
+                if ($updateConfig) {
+                        $this->setProjectSetting('user-dag-mapping', json_encode($userDags, JSON_PRETTY_PRINT));
                 }
                 
                 return $userDags;
@@ -370,8 +394,9 @@ class DAGSwitcher extends AbstractExternalModule
                 }
                 sort($userDags[$user], SORT_NUMERIC);
                 
-                // save to new log_event record
-                REDCap::logEvent(db_escape($this->getModuleName()), json_encode($userDags));
+                // save to module config
+                $this->setProjectSetting('user-dag-mapping', json_encode($userDags, JSON_PRETTY_PRINT));
+                REDCap::logEvent(db_escape($this->getModuleName()), json_encode($userDags, JSON_PRETTY_PRINT));
                 return '1'; 
         }
 
@@ -575,37 +600,6 @@ class DAGSwitcher extends AbstractExternalModule
                 }
         }
 
-        // TODO Remove these UI state config methods once they are implemented in AbstractExternalModule (min redcap 8.3.0)
-        
-        /**
-         * Return a value from the UI state config. Return null if key doesn't exist.
-         * @param int/string $key key
-         * @return mixed - value if exists, else return null
-         */
-        public function getUserSetting($key)
-	{
-		return \UIState::getUIStateValue($this->project_id, self::UI_STATE_OBJECT_PREFIX . $this->PREFIX, $key);
-	}
-	
-        /**
-         * Save a value in the UI state config (e.g., $object = 'sidebar')
-         * @param int/string $key key
-         * @param mixed $value value for key
-         */
-	public function setUserSetting($key, $value)
-	{
-		\UIState::saveUIStateValue($this->project_id, self::UI_STATE_OBJECT_PREFIX . $this->PREFIX, $key, $value);
-	}
-	
-        /**
-         * Remove key-value from the UI state config
-         * @param int/string $key key
-         */
-	public function removeUserSetting($key)
-	{
-		\UIState::removeUIStateValue($this->project_id, self::UI_STATE_OBJECT_PREFIX . $this->PREFIX, $key);
-	}
-
         public function apiDagSwitch($RestUtility, $newDag) {
                 global $Proj;
                 
@@ -621,5 +615,16 @@ class DAGSwitcher extends AbstractExternalModule
                 }
 
                 return $this->switchToDAG($newDag);
+        }
+        
+        /**
+         * Set default parameter values (using "default":"xyz" in config.json is deprecated)
+         * @param type $version
+         * @param type $project_id
+         */
+        public function redcap_module_project_enable($version, $project_id) {
+                foreach (self::$SettingDefaults as $settingKey => $settingValue) {
+                        $this->setProjectSetting($settingKey, $settingValue);
+                }
         }
 }
