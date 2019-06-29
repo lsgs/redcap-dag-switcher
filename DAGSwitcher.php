@@ -188,7 +188,7 @@ class DAGSwitcher extends AbstractExternalModule
                 
                 print RCView::div(array('id'=>'dag-switcher-config-container', 'class'=>'gray'),//,'style'=>'width:698px;display:none;margin-top:20px'), 
                             RCView::div(array('style'=>'float:right'), "<input type='radio' name='rowoption' value='dags' $rowOptionCheckedD>&nbsp; $dagTableRowOptionDags<br><input type='radio' name='rowoption' value='users' $rowOptionCheckedU>&nbsp; $dagTableRowOptionUsers<br>").
-                            RCView::div(array('style'=>'font-weight:bold;font-size:120%'), RCView::img(array('src'=>'puzzle_small.png')).$dagTableBlockTitle).
+                            RCView::div(array('style'=>'font-weight:bold;font-size:120%'), RCView::i(array('class'=>'fas fa-cube fs14 mr-1')).$dagTableBlockTitle).
                             RCView::div(array('style'=>'margin:10px 0;'), $dagTableBlockInfo).
                             RCView::div(array('id'=>'dag-switcher-spin'),//, 'style'=>'width:100%;text-align:center;'),
                                     RCView::img(array('src'=>'progress_circle.gif'))
@@ -244,6 +244,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $col0Hdr = $this->lang['global_22']; // Data Access Groups
                         $colGroupHdr = $this->lang['control_center_132']; // Users
                         $colSet = REDCap::getUsers();
+                        uasort($colSet, $this->value_compare_func); // sort in ascending order by value, case-insensitive, preserving keys
                         $this->setUserSetting('rowoption', 'dags');
                         $superusers = $this->readSuperUserNames();
                 } else { // $rowsAreDags===false // columns are dags
@@ -251,7 +252,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $col0Hdr = $this->lang['control_center_132']; // Users
                         $colGroupHdr = $this->lang['global_22']; // Data Access Groups
                         $colSet = REDCap::getGroupNames(false);
-                        asort($colSet); // sort associative arrays in ascending order, according to the value, preserving keys
+                        uasort($colSet, $this->value_compare_func); // sort in ascending order by value, case-insensitive, preserving keys
                         $colSet = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)$colSet; // [No Assignment]
                         $this->setUserSetting('rowoption', 'users');
                 }
@@ -305,13 +306,14 @@ class DAGSwitcher extends AbstractExternalModule
                 $usersEnabledDags = $this->getUserDAGs();
 
                 $users = REDCap::getUsers();
-                asort($users); 
+                uasort($users, $this->value_compare_func); // sort in ascending order by value, case-insensitive, preserving keys
 
                 $dags = REDCap::getGroupNames(false);
-                asort($dags); // sort associative arrays in ascending order, according to the value, preserving keys
+                uasort($dags, $this->value_compare_func); // sort in ascending order by value, case-insensitive, preserving keys
                 $dags = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)$dags; // [No Assignment]
                 
                 $rows = array();
+                $superusers = $this->readSuperUserNames();
                 
                 if (count($users)===0) { // can only be a superuser viewing an orphan project so don't need anything fancy returned
                         $rows = null; 
@@ -326,7 +328,7 @@ class DAGSwitcher extends AbstractExternalModule
                                             'dagname' => $dagName,
                                             'user' => $user,
                                             'enabled' => (in_array($dagId, $usersEnabledDags[$user]))?1:0,
-                                            'is_super' => (in_array($user, $this->readSuperUserNames()))?1:0
+                                            'is_super' => (in_array($user, $superusers))?1:0
                                         );
                                 }
                                 $rows[] = $row;
@@ -334,7 +336,7 @@ class DAGSwitcher extends AbstractExternalModule
                 } else {
                         foreach ($users as $user) {
                                 $row = array();
-                                $row[] = array('rowref'=>$user,'is_super' => (in_array($user, $this->readSuperUserNames()))?1:0);
+                                $row[] = array('rowref'=>$user,'is_super' => (in_array($user, $superusers))?1:0);
                                 foreach ($dags as $dagId => $dagName) {
                                         $row[] = array(
                                             'rowref' => $user,
@@ -342,7 +344,7 @@ class DAGSwitcher extends AbstractExternalModule
                                             'dagname' => $dagName,
                                             'user' => $user,
                                             'enabled' => (in_array($dagId, $usersEnabledDags[$user]))?1:0,
-                                            'is_super' => (in_array($user, $this->readSuperUserNames()))?1:0
+                                            'is_super' => (in_array($user, $superusers))?1:0
                                         );
                                 }
                                 $rows[] = $row;
@@ -436,7 +438,7 @@ class DAGSwitcher extends AbstractExternalModule
                                         }
                                 }
 
-                                asort($thisUserOtherDags); // sort dag names alphabetically in dialog, preserving keys
+                                uasort($thisUserOtherDags, $this->value_compare_func); // sort dag names alphabetically in dialog, preserving keys
 
                                 $changeButton = RCView::button(array('id'=>'dag-switcher-change-button', 'class'=>'btn btn-sm btn-primary'), $dagSwitchDialogBtnText);
 
@@ -626,5 +628,18 @@ class DAGSwitcher extends AbstractExternalModule
                 foreach (self::$SettingDefaults as $settingKey => $settingValue) {
                         $this->setProjectSetting($settingKey, $settingValue);
                 }
+        }
+        
+        /**
+         * value_compare_func
+         * Can't get asort($users, SORT_STRING | SORT_FLAG_CASE | SORT_NATURAL);
+         * to sort user and dag names in natural, case insensitive, order, so 
+         * using user sort, uasort(), with this as compare function.
+         * @param string $a
+         * @param string $b
+         * @return string
+         */
+        private function value_compare_func(string $a, string $b) {
+                return strcmp(strtolower($a), strtolower($b));
         }
 }
