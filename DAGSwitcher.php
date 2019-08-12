@@ -244,7 +244,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $col0Hdr = $this->lang['global_22']; // Data Access Groups
                         $colGroupHdr = $this->lang['control_center_132']; // Users
                         $colSet = REDCap::getUsers();
-                        uasort($colSet, $this->value_compare_func); // sort in ascending order by value, case-insensitive, preserving keys
+                        uasort($colSet, array($this,'value_compare_func')); // sort in ascending order by value, case-insensitive, preserving keys
                         $this->setUserSetting('rowoption', 'dags');
                         $superusers = $this->readSuperUserNames();
                 } else { // $rowsAreDags===false // columns are dags
@@ -252,7 +252,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $col0Hdr = $this->lang['control_center_132']; // Users
                         $colGroupHdr = $this->lang['global_22']; // Data Access Groups
                         $colSet = REDCap::getGroupNames(false);
-                        uasort($colSet, $this->value_compare_func); // sort in ascending order by value, case-insensitive, preserving keys
+                        uasort($colSet, array($this,'value_compare_func')); // sort in ascending order by value, case-insensitive, preserving keys
                         $colSet = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)$colSet; // [No Assignment]
                         $this->setUserSetting('rowoption', 'users');
                 }
@@ -306,10 +306,10 @@ class DAGSwitcher extends AbstractExternalModule
                 $usersEnabledDags = $this->getUserDAGs();
 
                 $users = REDCap::getUsers();
-                uasort($users, $this->value_compare_func); // sort in ascending order by value, case-insensitive, preserving keys
+                uasort($users, array($this,'value_compare_func')); // sort in ascending order by value, case-insensitive, preserving keys
 
                 $dags = REDCap::getGroupNames(false);
-                uasort($dags, $this->value_compare_func); // sort in ascending order by value, case-insensitive, preserving keys
+                uasort($dags, array($this,'value_compare_func')); // sort in ascending order by value, case-insensitive, preserving keys
                 $dags = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)$dags; // [No Assignment]
                 
                 $rows = array();
@@ -438,14 +438,14 @@ class DAGSwitcher extends AbstractExternalModule
                                         }
                                 }
 
-                                uasort($thisUserOtherDags, $this->value_compare_func); // sort dag names alphabetically in dialog, preserving keys
+                                uasort($thisUserOtherDags, array($this,'value_compare_func')); // sort dag names alphabetically in dialog, preserving keys
 
-                                $changeButton = RCView::button(array('id'=>'dag-switcher-change-button', 'class'=>'btn btn-sm btn-primary'), $dagSwitchDialogBtnText);
+                                $changeButton = RCView::button(array('id'=>'dag-switcher-change-button', 'class'=>'btn btn-sm btn-primaryrc'), '<i class="fas fa-random mr-1"></i>'.$dagSwitchDialogBtnText);
 
                                 $dagSelect = RCView::select(array('id'=>'dag-switcher-change-select', 'class'=>'form-control'), $thisUserOtherDags);
 
                                 $apiMsg = '';
-                                if ($this->user_rights['api_export'] || $this->user_rights['api_export']) {
+                                if ($this->user_rights['api_export'] || $this->user_rights['api_import']) {
                                         $apiMsg = RCView::div(
                                             array('class'=>'blue', 'style'=>'margin:5px 0;'), 
                                             RCView::img(array('src'=>'computer.png')).
@@ -456,7 +456,7 @@ class DAGSwitcher extends AbstractExternalModule
                                             ).
                                             RCView::div(
                                                 array('id'=>'dag-switch-api-info', 'style'=>'display:none;margin-top:10px;'), 
-                                                '<strong>POST</strong> "token" and "dag" (id or unique name) to your API endpoint.<br>You must including the query string shown in this example:<br><span style="font-family:monospace;font-size:80%;">curl -d "token=ABCDEF0123456789ABCDEF0123456789&dag=site_a" <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"'.APP_PATH_WEBROOT_FULL.'/api/?NOAUTH&type=module&prefix=dag_switcher&page=user_dag_switch_api"</span>'
+                                                '<strong>POST</strong> "token" and "dag" (id or unique name) to your API endpoint.<br>You must include the query string shown in this example:<br><span style="font-family:monospace;font-size:80%;">curl -d "token=ABCDEF0123456789ABCDEF0123456789&dag=site_a" <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"'.APP_PATH_WEBROOT_FULL.'/api/?NOAUTH&type=module&prefix=dag_switcher&page=user_dag_switch_api"</span>'
                                             )
                                         );
                                 }
@@ -639,7 +639,7 @@ class DAGSwitcher extends AbstractExternalModule
          * @param string $b
          * @return string
          */
-        private function value_compare_func(string $a, string $b) {
+        private static function value_compare_func(string $a, string $b) {
                 return strcmp(strtolower($a), strtolower($b));
         }
 }

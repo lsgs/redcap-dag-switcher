@@ -27,9 +27,14 @@ var MCRI_DAG_Switcher_User_Rights = (function(window, document, $, JSON, undefin
     };
     
     function appendDagInfo(appendAfter, user, dagIdList) {
-        var content = '<div style=\'font-size:75%;padding:5px;\'>User <span class=\'text-primary\'>'+user+'</span> may switch to DAGs:<ul style=\'padding-left:10px;\'>';
+        var dagNames = [];
         dagIdList.forEach(function(dagId) {
-            content += '<li><span class=\'text-info\'>'+allDagNames[dagId]+'</span></li>';
+            dagNames.push(allDagNames[dagId]);
+        });
+        dagNames.sort()
+        var content = '<div style=\'font-size:75%;padding:5px;\'>User <span class=\'text-primary\'>'+user+'</span> may switch to DAGs:<ul style=\'padding-left:10px;\'>';
+        dagNames.forEach(function(el) {
+            content += '<li><span class=\'text-info\'>'+el+'</span></li>';
         });
         content += '</ul>';
         appendAfter.after(' <a href="#" data-toggle="popover" data-content="'+content+'" style="font-size:75%;color:gray;">(+'+dagIdList.length+')</a>');
@@ -37,7 +42,7 @@ var MCRI_DAG_Switcher_User_Rights = (function(window, document, $, JSON, undefin
     
     var activatePopovers = function() {
         $('[data-toggle="popover"]').popover({
-            title: 'DAG Switcher',
+            title: '<i class="fas fa-cube mr-1"></i>DAG Switcher',
             html: true,
             trigger: 'hover',
             container: 'body',
