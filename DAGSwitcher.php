@@ -215,6 +215,7 @@ class DAGSwitcher extends AbstractExternalModule
     #dag-switcher-table tr.odd { background-color: #f1f1f1 !important; }
     #dag-switcher-table tr.even { background-color: #fafafa !important; }
     #dag-switcher-table td.highlight { background-color: whitesmoke !important; }
+    .DTFC_LeftBodyLiner { overflow-x: hidden; }
 </style>
 <script type="text/javascript" src="<?php echo $jsPath;?>"></script>
 <script type="text/javascript">

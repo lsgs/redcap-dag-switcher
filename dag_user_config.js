@@ -31,7 +31,7 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
             scrollY: "350px",
             scrollCollapse: true,
             fixedHeader: { header: true },
-/*            fixedColumns: { leftColumns: 1 }, this does weird things to the row colouring and you get overlapping cell wording when sorting on other columns */
+            fixedColumns: { leftColumns: 1 }, /*this does weird things to the row colouring and you get overlapping cell wording when sorting on other columns */
             ajax: getTableRowsAjaxPath+'&rowoption='+rowoption,
             columnDefs: [ 
                 {
