@@ -11,6 +11,7 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
     var setUserDagAjaxPath;
     var table;
     var rowoption;
+    var pageSize;
     
     function getTable() {
         $('#dag-switcher-table-container').hide().html('');
@@ -19,16 +20,26 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
         $.get(getTableAjaxPath+'&rowoption='+rowoption).then(function(data) {
             $('#dag-switcher-spin').hide();
             $('#dag-switcher-table-container').html(data).show();
-            initDataTable(rowoption);
+            initDataTable(rowoption, pageSize);
         });
     }
     
-    function initDataTable(rowoption) {
+    function initDataTable(rowoption, pageSize) {
+        var pageOpt = [], pageOptLbl = [];
+        if (pageSize>0) {
+            pageOpt.push(pageSize);
+            pageOptLbl.push(pageSize);
+        }
+        pageOpt.push(-1);
+        pageOptLbl.push("All");
         table = $('#dag-switcher-table').DataTable( { 
-            paging: false,
+            deferRender: true,
+            stateSave: true,
             searching: true,
+            pagingType: "full_numbers",
+            lengthMenu: [ pageOpt, pageOptLbl ],
             scrollX: true,
-            scrollY: "350px",
+            /*scrollY: "500px",*/
             scrollCollapse: true,
             fixedHeader: { header: true },
             fixedColumns: { leftColumns: 1 }, /*this does weird things to the row colouring and you get overlapping cell wording when sorting on other columns */
@@ -36,6 +47,7 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
             columnDefs: [ 
                 {
                     "targets": 0,
+                    "className": "dag-switcher-table-left-col",
                     "render": function ( celldata, type, row ) {
                         var celltext;
                         if (typeof celldata.is_super !== 'undefined' && celldata.is_super) {
@@ -98,10 +110,6 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
                 cb.show();
             });
         });
-        
-        var searchBox = $('#dag-switcher-table_filter');
-        var searchBoxParentPrevDiv = searchBox.parent().prev('div');
-        searchBox.detach().appendTo(searchBoxParentPrevDiv).css('float', 'left');
     }
 
     function refreshTableData() {
@@ -113,11 +121,12 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
     }
     
     return {
-        initPage: function(app_path_img, getTablePath, getTableRowsPath, setUserDagPath) {
+        initPage: function(app_path_img, getTablePath, getTableRowsPath, setUserDagPath, setPageSize) {
             app_path_images = app_path_img;
             getTableAjaxPath = getTablePath;
             getTableRowsAjaxPath = getTableRowsPath;
             setUserDagAjaxPath = setUserDagPath;
+            pageSize = setPageSize;
             
             $('#dag-switcher-config-container').delegate('input[name=rowoption]','change', function () {
                 getTable();

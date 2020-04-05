@@ -111,7 +111,8 @@ class DAGSwitcher extends AbstractExternalModule
         /**
          * Read the current configuration of users and enabled DAGs from the 
          * user-dag-mapping project setting (or fall back to most recent DAG 
-         * Switcher record in redcap_log_event where stored until v1.2.1)
+         * Switcher record in redcap_log_event where stored until v1.2.1 - 
+         * removed in v1.3.0)
          * @return array 
          *  keys: Usernames
          *  values: Array of DAGids user may switch to
@@ -127,19 +128,6 @@ class DAGSwitcher extends AbstractExternalModule
                 
                 if (!is_array($userDags)) {
                         $userDags = array();
-
-                        $sql = "select data_values ".
-                               "from redcap_log_event ".
-                               "where project_id = ".db_escape($this->project_id)." ".
-                               "and description = '".db_escape($this->getModuleName())."' ".
-                               "order by log_event_id desc limit 1 ";
-                        $r = db_query($sql);
-                        if ($r->num_rows > 0) {
-                                while ($row = $r->fetch_assoc()) {
-                                       $userDags = json_decode($row['data_values'], true);
-                                }
-                                $updateConfig = true;
-                            }
                 }
                 
                 // return only valid group_id values (remove any DAGs that have been deleted)
@@ -207,15 +195,23 @@ class DAGSwitcher extends AbstractExternalModule
                 $getTablePath = $this->getUrl('get_user_dags_table_ajax.php');
                 $getTableRowsPath = $this->getUrl('get_user_dags_table_rows_ajax.php');
                 $setUserDagPath = $this->getUrl('set_user_dag_ajax.php');
+                
+                $pageSize = $this->getProjectSetting('page-at-n-rows');
+                $pageSize = (!is_null($pageSize) && intval($pageSize)>0) 
+                        ? intval($pageSize)
+                        : $pageSize = -1; // All
+                
                 ?>
 <style type="text/css">
-    #dag-switcher-config-container { width:698px; display:none; margin-top:20px; }
+    #dag-switcher-config-container { width:100%; display:none; margin-top:20px; }
     #dag-switcher-spin { width:100%; text-align:center; }
     #dag-switcher-table-container { width:100%; display:none; }
     #dag-switcher-table tr.odd { background-color: #f1f1f1 !important; }
     #dag-switcher-table tr.even { background-color: #fafafa !important; }
+    #dag-switcher-table td { text-align: center; }
     #dag-switcher-table td.highlight { background-color: whitesmoke !important; }
     .DTFC_LeftBodyLiner { overflow-x: hidden; }
+    .dag-switcher-table-left-col { max-width: 300px; overflow: hidden; text-align: left; }
 </style>
 <script type="text/javascript" src="<?php echo $jsPath;?>"></script>
 <script type="text/javascript">
@@ -223,7 +219,8 @@ class DAGSwitcher extends AbstractExternalModule
         var getTableAjaxPath = '<?php echo $getTablePath;?>';
         var getTableRowsAjaxPath = '<?php echo $getTableRowsPath;?>';;
         var setUserDagAjaxPath = '<?php echo $setUserDagPath;?>';;
-        MCRI_DAG_Switcher_Config.initPage(app_path_images, getTableAjaxPath, getTableRowsAjaxPath, setUserDagAjaxPath);
+        var pageSize = <?php echo $pageSize;?>;;
+        MCRI_DAG_Switcher_Config.initPage(app_path_images, getTableAjaxPath, getTableRowsAjaxPath, setUserDagAjaxPath, pageSize);
     });
 </script>
                 <?php

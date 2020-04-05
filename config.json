@@ -17,10 +17,7 @@
 
 	"permissions": [
             "redcap_every_page_top",
-            "redcap_module_project_enable",
-            "read redcap_log_event",
-            "read redcap_user_rights",
-            "write redcap_user_rights"
+            "redcap_module_project_enable"
 	],
 
 	"description": "Enable project users to switch between any number of Data Access Groups (and/or \"No Assignment\").",
@@ -36,6 +33,12 @@
 	],
 
 	"project-settings": [
+		{
+			"key": "page-at-n-rows",
+			"name": "Number of rows per table page:<br>Leave blank to show all DAGs/users (default).<br>(Can aid performance when project has hundreds of DAGs and users) ",
+			"required": false,
+			"type": "text"
+		},
 		{
 			"key": "user-dag-mapping",
 			"name": "User-DAG Mapping (updated by user/DAG selections on project DAGs page)",
