@@ -37,7 +37,7 @@ var MCRI_DAG_Switcher_User_Rights = (function(window, document, $, JSON, undefin
             content += '<li><span class=\'text-info\'>'+el+'</span></li>';
         });
         content += '</ul>';
-        appendAfter.after(' <a href="#" data-toggle="popover" data-content="'+content+'" style="font-size:75%;color:gray;">(+'+dagIdList.length+')</a>');
+        appendAfter.after(' <a href="#" class="dag-switcher-em-popover" data-toggle="popover" data-content="'+content+'" style="font-size:75%;color:gray;">(+'+dagIdList.length+')</a>');
     };
     
     var activatePopovers = function() {

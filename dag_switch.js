@@ -28,26 +28,26 @@ var MCRI_DAG_Switcher_Switch = (function(window, document, $, undefined) {
         init: function(savePath, dagSwitchDialogTitle) {
             switchSavePath = savePath;
             
-            $('#dag-switcher-change-dialog').dialog({
+            $('#dag-switcher-em-change-dialog').dialog({
                 title: dagSwitchDialogTitle,
                 autoOpen: false,
                 width: 500,
                 modal: true,
                 buttons: { 
                     Ok: function() { 
-                        var newDag = $('#dag-switcher-change-select').val();
+                        var newDag = $('#dag-switcher-em-change-select').val();
                         doDagSwitch(newDag); 
                     }, 
                     Cancel: function() { $( this ).dialog( "close" ); } 
                 }
             });
 
-            $('#dag-switcher-change-button').click(function(e) {
+            $('#dag-switcher-em-change-button').click(function(e) {
                 e.preventDefault();
-                $('#dag-switcher-change-dialog').dialog('open');
+                $('#dag-switcher-em-change-dialog').dialog('open');
             });
 
-            $('#dag-switcher-current-dag-block').detach().insertAfter('#subheader').show();
+            $('#dag-switcher-em-current-dag-block').detach().insertAfter('#subheader').show();
         }
     };
 })(window, document, jQuery);

@@ -14,12 +14,12 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
     var pageSize;
     
     function getTable() {
-        $('#dag-switcher-table-container').hide().html('');
-        $('#dag-switcher-spin').show();
-        rowoption = $('#dag-switcher-config-container input[name="rowoption"]:checked').val();
+        $('#dag-switcher-em-table-container').hide().html('');
+        $('#dag-switcher-em-spin').show();
+        rowoption = $('#dag-switcher-em-config-container input[name="rowoption-em"]:checked').val();
         $.get(getTableAjaxPath+'&rowoption='+rowoption).then(function(data) {
-            $('#dag-switcher-spin').hide();
-            $('#dag-switcher-table-container').html(data).show();
+            $('#dag-switcher-em-spin').hide();
+            $('#dag-switcher-em-table-container').html(data).show();
             initDataTable(rowoption, pageSize);
         });
     }
@@ -32,7 +32,7 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
         }
         pageOpt.push(-1);
         pageOptLbl.push("All");
-        table = $('#dag-switcher-table').DataTable( { 
+        table = $('#dag-switcher-em-table').DataTable( { 
             deferRender: true,
             stateSave: true,
             searching: true,
@@ -41,13 +41,13 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
             scrollX: true,
             /*scrollY: "500px",*/
             scrollCollapse: true,
-            fixedHeader: { header: true },
+            /*fixedHeader: { header: true }, header does not stay in container*/
             fixedColumns: { leftColumns: 1 }, /*this does weird things to the row colouring and you get overlapping cell wording when sorting on other columns */
             ajax: getTableRowsAjaxPath+'&rowoption='+rowoption,
             columnDefs: [ 
                 {
                     "targets": 0,
-                    "className": "dag-switcher-table-left-col",
+                    "className": "dag-switcher-em-table-left-col",
                     "render": function ( celldata, type, row ) {
                         var celltext;
                         if (typeof celldata.is_super !== 'undefined' && celldata.is_super) {
@@ -73,7 +73,7 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
             ]
         });
         
-        $('#dag-switcher-table tbody').on('change', 'input', function () {
+        $('#dag-switcher-em-table tbody').on('change', 'input', function () {
             var cb = $(this);
             var parentTd = cb.parent('td');
             var spinner = parentTd.find('img');
@@ -128,10 +128,10 @@ var MCRI_DAG_Switcher_Config = (function(window, document, $, undefined) {
             setUserDagAjaxPath = setUserDagPath;
             pageSize = setPageSize;
             
-            $('#dag-switcher-config-container').delegate('input[name=rowoption]','change', function () {
+            $('#dag-switcher-em-config-container').delegate('input[name=rowoption-em]','change', function () {
                 getTable();
             });
-            $('#dag-switcher-config-container').detach().insertAfter('#group_table').show();
+            $('#dag-switcher-em-config-container').detach().insertAfter('#dag-switcher-config-container-parent').show();
             getTable();
 
             // The hidedagMsg() function is called after adding/deleting a group

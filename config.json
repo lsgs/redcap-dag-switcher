@@ -35,7 +35,7 @@
 	"project-settings": [
 		{
 			"key": "page-at-n-rows",
-			"name": "Number of rows per table page:<br>Leave blank to show all DAGs/users (default).<br>(Can aid performance when project has hundreds of DAGs and users) ",
+			"name": "Number of rows per table page:<br>Leave blank to show all DAGs/users (default).<br>(Can aid performance when project has hundreds of DAGs and users)<br>Example: 20",
 			"required": false,
 			"type": "text"
 		},

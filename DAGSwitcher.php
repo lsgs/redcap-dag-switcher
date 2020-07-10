@@ -31,7 +31,7 @@ class DAGSwitcher extends AbstractExternalModule
         private $user_rights;
         private $Proj;
         
-        public static $IgnorePages = array('FileRepository','ProjectSetup','ExternalModules','UserRights','DataAccessGroups','SendItController');
+        public static $IgnorePages = array('FileRepository','ProjectSetup','ExternalModules','UserRights','DataAccessGroupsController','SendItController');
         
         private static $SettingDefaults = array(
 		"dag-switcher-block-text-pre" => "Current Data Access Group: ",
@@ -63,7 +63,7 @@ class DAGSwitcher extends AbstractExternalModule
 
                 $pageRoute = $this->getPageRoute();
                 
-                if ($pageRoute==='DataAccessGroups') {
+                if ($pageRoute==='DataAccessGroupsController') {
                         
                         $this->renderDAGPageTableContainer();
                         $this->includeDAGPageJs();
@@ -166,22 +166,22 @@ class DAGSwitcher extends AbstractExternalModule
                 $dagTableRowOptionDags = REDCap::filterHtml($this->getProjectSetting('dag-switcher-table-row-option-dags'));
                 $dagTableRowOptionUsers = REDCap::filterHtml($this->getProjectSetting('dag-switcher-table-row-option-users'));
 
-                if ($this->getUserSetting('rowoption')==='users') {
+                if ($this->getUserSetting('rowoption-em')==='users') {
                         $rowOptionCheckedD = ''; 
-                        $rowOptionCheckedU = 'checked'; // rows are users, columns are dags
+                        $rowOptionCheckedU = 'checked=""'; // rows are users, columns are dags
                 } else {
-                        $rowOptionCheckedD = 'checked'; // rows are dags, columns are users
+                        $rowOptionCheckedD = 'checked=""'; // rows are dags, columns are users
                         $rowOptionCheckedU = '';
                 }
                 
-                print RCView::div(array('id'=>'dag-switcher-config-container', 'class'=>'gray'),//,'style'=>'width:698px;display:none;margin-top:20px'), 
-                            RCView::div(array('style'=>'float:right'), "<input type='radio' name='rowoption' value='dags' $rowOptionCheckedD>&nbsp; $dagTableRowOptionDags<br><input type='radio' name='rowoption' value='users' $rowOptionCheckedU>&nbsp; $dagTableRowOptionUsers<br>").
+                print RCView::div(array('id'=>'dag-switcher-em-config-container', 'class'=>'gray'),//,'style'=>'width:698px;display:none;margin-top:20px'), 
+                            RCView::div(array('style'=>'float:right'), "<input type='radio' name='rowoption-em' value='dags' $rowOptionCheckedD>&nbsp; $dagTableRowOptionDags<br><input type='radio' name='rowoption-em' value='users' $rowOptionCheckedU>&nbsp; $dagTableRowOptionUsers<br>").
                             RCView::div(array('style'=>'font-weight:bold;font-size:120%'), RCView::i(array('class'=>'fas fa-cube fs14 mr-1')).$dagTableBlockTitle).
                             RCView::div(array('style'=>'margin:10px 0;'), $dagTableBlockInfo).
-                            RCView::div(array('id'=>'dag-switcher-spin'),//, 'style'=>'width:100%;text-align:center;'),
+                            RCView::div(array('id'=>'dag-switcher-em-spin'),//, 'style'=>'width:100%;text-align:center;'),
                                     RCView::img(array('src'=>'progress_circle.gif'))
                             ).
-                            RCView::div(array('id'=>'dag-switcher-table-container'),//, 'style'=>'width:100%;display:none;'),
+                            RCView::div(array('id'=>'dag-switcher-em-table-container'),//, 'style'=>'width:100%;display:none;'),
                                     ''
                             )
                 );
@@ -203,15 +203,16 @@ class DAGSwitcher extends AbstractExternalModule
                 
                 ?>
 <style type="text/css">
-    #dag-switcher-config-container { width:100%; display:none; margin-top:20px; }
-    #dag-switcher-spin { width:100%; text-align:center; }
-    #dag-switcher-table-container { width:100%; display:none; }
-    #dag-switcher-table tr.odd { background-color: #f1f1f1 !important; }
-    #dag-switcher-table tr.even { background-color: #fafafa !important; }
-    #dag-switcher-table td { text-align: center; }
-    #dag-switcher-table td.highlight { background-color: whitesmoke !important; }
+    #dag-switcher-config-container { display: none; } /* hide built-in dag switcher */
+    #dag-switcher-em-config-container { width:100%; display:none; margin-top:20px; }
+    #dag-switcher-em-spin { width:100%; text-align:center; }
+    #dag-switcher-em-table-container { width:100%; display:none; }
+    #dag-switcher-em-table tr.odd { background-color: #f1f1f1 !important; }
+    #dag-switcher-em-table tr.even { background-color: #fafafa !important; }
+    #dag-switcher-em-table td { text-align: center; }
+    #dag-switcher-em-table td.highlight { background-color: whitesmoke !important; }
     .DTFC_LeftBodyLiner { overflow-x: hidden; }
-    .dag-switcher-table-left-col { max-width: 300px; overflow: hidden; text-align: left; }
+    .dag-switcher-em-table-left-col { max-width: 300px; overflow: hidden; text-align: left; }
 </style>
 <script type="text/javascript" src="<?php echo $jsPath;?>"></script>
 <script type="text/javascript">
@@ -243,7 +244,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $colGroupHdr = $this->lang['control_center_132']; // Users
                         $colSet = REDCap::getUsers();
                         uasort($colSet, array($this,'value_compare_func')); // sort in ascending order by value, case-insensitive, preserving keys
-                        $this->setUserSetting('rowoption', 'dags');
+                        $this->setUserSetting('rowoption-em', 'dags');
                         $superusers = $this->readSuperUserNames();
                 } else { // $rowsAreDags===false // columns are dags
                         // column-per-dag, row-per-user (load via ajax)
@@ -252,7 +253,7 @@ class DAGSwitcher extends AbstractExternalModule
                         $colSet = REDCap::getGroupNames(false);
                         uasort($colSet, array($this,'value_compare_func')); // sort in ascending order by value, case-insensitive, preserving keys
                         $colSet = array(0=>$this->lang['data_access_groups_ajax_23']) + (array)$colSet; // [No Assignment]
-                        $this->setUserSetting('rowoption', 'users');
+                        $this->setUserSetting('rowoption-em', 'users');
                 }
                 
                 $colhdrs = RCView::tr(array(),
@@ -282,7 +283,7 @@ class DAGSwitcher extends AbstractExternalModule
                         );
                 }
 
-                $html = RCView::table(array('class'=>'table table-striped table-bordered display nowrap compact no-footer','id'=>'dag-switcher-table'),
+                $html = RCView::table(array('class'=>'table table-striped table-bordered display nowrap compact no-footer','id'=>'dag-switcher-em-table'),
                                 RCView::thead(array(), $colhdrs)
                         );
 
@@ -438,9 +439,9 @@ class DAGSwitcher extends AbstractExternalModule
 
                                 uasort($thisUserOtherDags, array($this,'value_compare_func')); // sort dag names alphabetically in dialog, preserving keys
 
-                                $changeButton = RCView::button(array('id'=>'dag-switcher-change-button', 'class'=>'btn btn-sm btn-primaryrc'), '<i class="fas fa-random mr-1"></i>'.$dagSwitchDialogBtnText);
+                                $changeButton = RCView::button(array('id'=>'dag-switcher-em-change-button', 'class'=>'btn btn-sm btn-primaryrc'), '<i class="fas fa-random mr-1"></i>'.$dagSwitchDialogBtnText);
 
-                                $dagSelect = RCView::select(array('id'=>'dag-switcher-change-select', 'class'=>'form-control'), $thisUserOtherDags);
+                                $dagSelect = RCView::select(array('id'=>'dag-switcher-em-change-select', 'class'=>'form-control'), $thisUserOtherDags);
 
                                 $apiMsg = '';
                                 if ($this->user_rights['api_export'] || $this->user_rights['api_import']) {
@@ -460,14 +461,14 @@ class DAGSwitcher extends AbstractExternalModule
                                 }
                                 
                                 print RCView::div(
-                                        array('id'=>'dag-switcher-change-dialog'),
+                                        array('id'=>'dag-switcher-em-change-dialog'),
                                         RCView::div(array('style'=>'margin:5px 0;'), $dagSwitchDialogText).
                                         $dagSelect.
                                         $apiMsg
                                 );
 
                                 print RCView::div(
-                                        array('id'=>'dag-switcher-current-dag-block', 'class'=>'blue', 'style'=>'text-align:center;'),
+                                        array('id'=>'dag-switcher-em-current-dag-block', 'class'=>'blue', 'style'=>'text-align:center;'),
                                         RCView::img(array('src'=>'information_frame.png')).
                                         RCView::span(array('style'=>'margin:0 10px; font-size:110%;'),
                                             $pageBlockTextPre.
@@ -490,7 +491,7 @@ class DAGSwitcher extends AbstractExternalModule
                 $dagSwitchDialogTitle = REDCap::filterHtml($this->getProjectSetting('dag-switcher-dialog-title'));
                 ?>
 <style type="text/css">
-    #dag-switcher-current-dag-block {
+    #dag-switcher-em-current-dag-block {
         text-align:center;
         margin:-15px 0 15px 0;
     }
@@ -563,6 +564,9 @@ class DAGSwitcher extends AbstractExternalModule
                 $dagNames = array_map('htmlentities', $dagNames); // encode quotes etc. in dag names
                 
                 ?>
+<style type="text/css">
+    div.dagNameLinkDiv > a[data-toggle="popover"]:not(.dag-switcher-em-popover) { display: none; }
+</style>
 <script type="text/javascript" src="<?php echo $jsPath;?>"></script>
 <script type="text/javascript">
     $(document).ready(function() {
